@@ -38,7 +38,7 @@ void composeMeasure(Note *measure, uint8_t startRoot, uint8_t endRoot, uint8_t h
 				} else {
 					dirBias = 0;
 				}
-				
+
 				//Move towards or away from root
 				if (endRoot) {
 					measure[i].pitch = measure[i - 1].pitch - (r % 4) - 1 + dirBias;

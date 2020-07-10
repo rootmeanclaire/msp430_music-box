@@ -4,7 +4,6 @@
 #define COMPOSE_H
 
 #define NOTE_PRECISION 16
-#define NUM_MEASURES 16
 #define PITCH_REST 0
 #define PITCH_A4 45
 #define LEN_CHORD_LOOP 4

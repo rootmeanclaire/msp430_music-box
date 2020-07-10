@@ -6,24 +6,24 @@
 //Periods of one octave of C major starting from C0
 static const uint16_t REF_PERIODS[INTVL_OCTAVE] = {
 	674,
-	544,
-	439,
-	375,
-	303,
-	244,
-	197
+	601,
+	535,
+	505,
+	450,
+	401,
+	357
 };
 
 //The section currently being played
-Section *section;
+Section *section = 0;
 //Says which sample of the current tick it is
-uint32_t iSample = 0;
+uint16_t iSample = 0;
 //The current tick of the section
 uint16_t iTick = 0;
 //The index of the current note of the current measure
-uint8_t iMelody;
+uint8_t iMelody = 0;
 //The tick on which the last new melody note was loaded
-uint8_t iLastNew;
+uint8_t iLastNew = 0;
 //Pointer to the current measure
 Note *currMeasure;
 //If a note is ending this tick
@@ -36,32 +36,33 @@ uint16_t tBassline = 0;
 uint16_t periodMelody;
 uint16_t periodBassline;
 
+inline void stepSection();
+inline void sampleSection();
+
 uint16_t getHalfPeriod(uint8_t pitch) {
 	return REF_PERIODS[pitch % INTVL_OCTAVE] >> (pitch / INTVL_OCTAVE);
 }
 
 void setSection(Section *newSection) {
 	section = newSection;
-	stepSection();
-	iSample = 0;
 	iTick = 0;
+	stepSection();
 }
 
 void playFromStart() {
-	iSample = 0;
 	iTick = 0;
+	stepSection();
 }
 
 uint8_t donePlaying() {
 	return iTick >= NOTE_PRECISION * LEN_CHORD_LOOP;
 }
 
-void stepSection() {
+inline void stepSection() {
 	iSample = 0;
 
 	//Check if next measure should be loaded
 	if (iTick % NOTE_PRECISION == 0) {
-
 		//Load new bassline pitch
 		periodBassline = getHalfPeriod(
 			section->bassline.chords.roots[
@@ -91,13 +92,19 @@ void stepSection() {
 	}
 
 	//Check if any notes are ending this tick
-	melodyNoteEnd = iTick - iLastNew == currMeasure[iMelody].length - 1;
-	basslineNoteEnd = (
-		section->bassline.strumMask & (1 << ((iTick % NOTE_PRECISION) + 1))
+	melodyNoteEnd = (
+		0
+		//iTick - iLastNew == currMeasure[iMelody].length - 1
 	);
+	basslineNoteEnd = (
+		0
+		//section->bassline.strumMask & (1 << ((iTick % NOTE_PRECISION) + 1))
+	);
+
+	iTick++;
 }
 
-void sampleSection() {
+inline void sampleSection() {
 	if (currMeasure[iMelody].pitch != PITCH_REST && !(melodyNoteEnd && iSample > T_NOTE_OFF)) {
 		if (tMelody >= periodMelody) {
 			P1OUT ^= PIN_MELODY;
@@ -121,9 +128,10 @@ void sampleSection() {
 
 __attribute__((interrupt(TIMER0_A0_VECTOR)))
 void ISR_TIMER0_A0(void) {
-	if (iSample >= SAMPLES_PER_TICK) {
-		stepSection();
-		P1OUT ^= BIT0;
+	if (iTick < NOTE_PRECISION * LEN_CHORD_LOOP) {
+		sampleSection();
+		if (iSample >= SAMPLES_PER_TICK) {
+			stepSection();
+		}
 	}
-	sampleSection();
 }
