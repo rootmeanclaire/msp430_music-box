@@ -103,6 +103,10 @@ inline void stepSection() {
 		(section->bassline.strumMask & (1 << ((iTick + 1) % NOTE_PRECISION)))
 	);
 
+	if ((iTick & 0x03) == 0) {
+		P1OUT ^= BIT0;
+	}
+
 	iTick++;
 }
 
