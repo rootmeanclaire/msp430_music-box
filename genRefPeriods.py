@@ -3,7 +3,6 @@ from math import pow
 REF_OCTAVE = 0
 PITCH_A4 = 45
 LEN_SCALE = 7
-SECOND_SMCLK = 1000000
 SAMPLE_RATE = 22050
 SCALE_MAJ = [0, 2, 4, 5, 7, 9, 11]
 
