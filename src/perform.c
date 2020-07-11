@@ -103,10 +103,6 @@ inline void stepSection() {
 		(section->bassline.strumMask & (1 << ((iTick + 1) % NOTE_PRECISION)))
 	);
 
-	if ((iTick & 0x03) == 0) {
-		P1OUT ^= BIT0;
-	}
-
 	iTick++;
 }
 
@@ -139,5 +135,27 @@ void ISR_TIMER0_A0(void) {
 		if (iSample >= SAMPLES_PER_TICK) {
 			stepSection();
 		}
+	} else {
+		//Turn off audio sampling interrupt
+		TA0CCTL0 &= ~CCIE;
+		//Turn on wake interrupt
+		P1IE |= PIN_BUTTON_HINGE;
+		//Go to sleep
+		__bis_SR_register(LPM4_bits | GIE);
 	}
+}
+
+__attribute__((interrupt(PORT1_VECTOR)))
+void ISR_PORT1(void) {
+	//Turn off wake interrupt
+	P1IE |= PIN_BUTTON_HINGE;
+
+	//Compose new piece
+	*section = composeSection();
+	playFromStart();
+
+	//Turn on audio sampling interrupt
+	TA0CCTL0 &= ~CCIE;
+
+	__bis_SR_register_on_exit(LPM4_bits);
 }

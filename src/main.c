@@ -22,11 +22,13 @@ void main(void) {
 	P2OUT = 0x00;
 
 	//Set pins for output
-	P1DIR = PIN_MELODY | PIN_BASSLINE | BIT0;
+	P1DIR = PIN_MELODY | PIN_BASSLINE | PIN_LED;
+	//Set to wake on ing edge
+	P1IES = PIN_BUTTON_HINGE;
 	//Clear all output pins
 	P1OUT = 0x00;
 	//Disable secondary outputs
-	P1SEL &= ~(PIN_MELODY | PIN_BASSLINE | BIT0);
+	P1SEL &= ~(PIN_MELODY | PIN_BASSLINE | PIN_LED);
 
 	seedRandom();
 
@@ -48,17 +50,16 @@ void main(void) {
 	//Enable timer interrupt
 	TA0CCTL0 |= CCIE;
 
-	//Enable interrupts
-	__enable_interrupt();
-
-	while (1);
+	//Turn off CPU
+	//Everythin else is done with interrupts
+	__bis_SR_register(LPM0_bits | GIE);
 }
 
 void seedRandom(void) {
 	//Set up ADC
 	ADC10CTL1 = (
-		//Set input from P1.4 (A4)
-		INCH_4 |
+		//Set input from P1.3 (A3)
+		INCH_3 |
 		//Set clock divider to 4
 		ADC10DIV_3 |
 		//Set clock source to ADC10OSC
@@ -76,8 +77,8 @@ void seedRandom(void) {
 		//Enable ADC10
 		ADC10ON
 	);
-	//Enable P1.4 for ADC input
-	ADC10AE0 = BIT4;
+	//Enable P1.3 for ADC input
+	ADC10AE0 = BIT3;
 	
 	//Start ADC
 	ADC10CTL0 |= ENC | ADC10SC;
